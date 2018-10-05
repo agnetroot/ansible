@@ -1,0 +1,99 @@
+---
+- hosts: centos
+  user: root
+
+  tasks:
+    - name: Update CentOS
+      command: bash -c "yum -y update"
+
+    - name: EPEL install
+      yum: name={{item}} state=latest
+      with_items:
+      - epel-release
+
+    - name: Software install
+      yum: name={{item}} state=latest
+      with_items:
+      - mc
+      - nano
+      - wget
+      - yum-utils
+      - net-tools
+      - bind-utils
+      - chrony
+      - yum-cron
+      - iftop
+      - htop
+      - lsof
+      - bzip2
+      - traceroute
+      - gdisk
+      - iptables-services
+      
+    - name: Disable SELinux
+      lineinfile: dest=/etc/selinux/config regexp="^SELINUX=" insertafter="^SELINUX=" line="SELINUX=disabled"
+
+    - name: Configure Bash History. Insert string 1
+      lineinfile: 
+        dest: /root/.bashrc
+        line: export HISTSIZE=10000
+        state: present
+        create: yes
+
+    - name: Configure Bash History. Insert string 2
+      lineinfile: 
+        dest: /root/.bashrc
+        line: export HISTTIMEFORMAT="%h %d %H:%M:%S "
+        state: present
+        create: yes
+
+    - name: Configure Bash History. Insert string 3
+      lineinfile: 
+        dest: /root/.bashrc
+        line: PROMPT_COMMAND='history -a'
+        state: present
+        create: yes
+
+    - name: Configure Bash History. Insert string 4
+      lineinfile: 
+        dest: /root/.bashrc
+        line: export HISTIGNORE="ls:ll:history:w"
+        state: present
+        create: yes
+
+    - name: Firewalld disable
+      service: name=firewalld enabled=no
+
+    - name: Firewalld stop
+      service: name=firewalld state=stopped
+
+    - name: Iptables disable
+      service: name=iptables enabled=no
+
+    - name: Iptables stop
+      service: name=iptables state=stopped
+
+    - name: Chrony enable
+      service: name=chronyd enabled=yes
+
+    - name: Chrony start
+      service: name=chronyd state=started
+
+#    - name: serial-getty@ enable for access from kvm to vm console
+#      command: bash -c "systemctl enable serial-getty@ttyS0.service"
+
+#    - name: serial-getty@ start for access from kvm to vm console
+#      command: bash -c "systemctl start serial-getty@ttyS0.service"
+
+    - name: Copy iptables.sh to /etc
+      copy: src=iptables.sh dest=/etc/iptables.sh seuser=system_u
+
+    - name: Set timezone
+      command: bash -c "timedatectl set-timezone Asia/Yekaterinburg"
+      
+    - name: yum-cron modify for auto install updates
+      lineinfile: dest=/etc/yum/yum-cron.conf regexp="^apply_updates =" insertafter="^apply_updates =" line="apply_updates = yes"
+      
+    - name: Reboot after 1 minute
+      command: bash -c "shutdown -r +1"
+ 

@@ -1,0 +1,13 @@
+- hosts: webservers
+#  become: yes
+#  user: ag
+#  sudo: yes
+ 
+  tasks:
+    - name: Update system
+      yum: name='*' state=latest
+      notify:
+      - Update end
+    - name: Reboot
+      command: shutdown -r 1
+                                                    
